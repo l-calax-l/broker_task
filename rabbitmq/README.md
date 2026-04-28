@@ -12,7 +12,7 @@
 <details>
 <summary>📸 Скриншот 1.1: Успешное создание очереди</summary>
 
-![Скриншот создания очереди](./screenshots/img_1_1.png)
+![Скриншот создания очереди](../screenshots/rabbitmq_img/img_1_1.png)
 
 </details>
 
@@ -25,8 +25,8 @@
 <details>
 <summary>📸 Скриншот 1.2: Успешная отправка сообщений</summary>
 
-![Скриншот отправки сообщений](./screenshots/img_1_2_1.png)
-![Скриншот отправки сообщений](./screenshots/img_1_2_2.png)
+![Скриншот отправки сообщений](../screenshots/rabbitmq_img/img_1_2_1.png)
+![Скриншот отправки сообщений](../screenshots/rabbitmq_img/img_1_2_2.png)
 
 </details>
 
@@ -37,7 +37,7 @@
 <details>
 <summary>📸 Скриншот 1.3: Успешное получение сообщений</summary>
 
-![Скриншот получения сообщений](./screenshots/img_1_3.png)
+![Скриншот получения сообщений](../screenshots/rabbitmq_img/img_1_3.png)
 
 </details>
 
@@ -50,7 +50,7 @@
 <details>
 <summary>📸 Скриншот 2.1: Exchange создан</summary>
 
-![Скриншот создания exchange](./screenshots/img_2_1.png)
+![Скриншот создания exchange](../screenshots/rabbitmq_img/img_2_1.png)
 
 </details>
 
@@ -61,7 +61,7 @@
 <details>
 <summary>📸 Скриншот 2.2: Очереди созданы</summary>
 
-![Скриншот создания очередей](./screenshots/img_2_2.png)
+![Скриншот создания очередей](../screenshots/rabbitmq_img/img_2_2.png)
 
 </details>
 
@@ -72,7 +72,7 @@
 <details>
 <summary>📸 Скриншот 2.3: Привязки настроены</summary>
 
-![Скриншот биндингов](./screenshots/img_2_3.png)
+![Скриншот биндингов](../screenshots/rabbitmq_img/img_2_3.png)
 
 </details>
 
@@ -83,7 +83,7 @@
 <details>
 <summary>📸 Скриншот 2.4: Сообщения опубликованы</summary>
 
-![Скриншот отправки через exchange](./screenshots/img_2_4.png)
+![Скриншот отправки через exchange](../screenshots/rabbitmq_img/img_2_4.png)
 
 </details>
 
@@ -94,7 +94,7 @@
 <details>
 <summary>📸 Скриншот 2.5.1: Получение error-сообщений</summary>
 
-![Скриншот consumer error](./screenshots/img_2_5_1.png)
+![Скриншот consumer error](../screenshots/rabbitmq_img/img_2_5_1.png)
 
 </details>
 
@@ -103,7 +103,7 @@
 <details>
 <summary>📸 Скриншот 2.5.2: Получение info-сообщений</summary>
 
-![Скриншот consumer info](./screenshots/img_2_5_2.png)
+![Скриншот consumer info](../screenshots/rabbitmq_img/img_2_5_2.png)
 
 </details>
 
