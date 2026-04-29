@@ -1,98 +1,70 @@
 import logging
-from confluent_kafka import Consumer, KafkaError
-from typing import List, Optional, Any
+import pika
+from typing import Optional, Callable, Any
 
 logger = logging.getLogger(__name__)
 
+class RabbitMQConsumer:
+    """Потребитель для чтения сообщений из очереди."""
 
-class MultiTopicConsumer:
-    """Потребитель для чтения сообщений из нескольких топиков Kafka."""
+    def __init__(self, host: str = "localhost", queue: str = "task_queue"):
+        self.host = host
+        self.queue = queue
+        self._connection: Optional[pika.BlockingConnection] = None
+        self._channel: Optional[pika.adapters.blocking_connection.BlockingChannel] = None
 
-    def __init__(
-            self,
-            topics: List[str],
-            bootstrap_servers: str = "localhost:9092",
-            group_id: str = "py-consumer-group"
-    ):
-        self._topics = topics
-        self._bootstrap_servers = bootstrap_servers
-        self._group_id = group_id
-        self._config = {
-            "bootstrap.servers": bootstrap_servers,
-            "group.id": group_id,
-            "auto.offset.reset": "latest",
-            "enable.auto.commit": True,
-        }
-        self._consumer: Optional[Consumer] = None
-        self._running: bool = True
+    def connect(self) -> None:
+        """Устанавливает соединение и объявляет очередь."""
+        if self._connection and self._connection.is_open:
+            return
 
-    def connect_and_subscribe(self) -> None:
-        """Инициализирует потребитель и подписывается на топики."""
-        self._consumer = Consumer(self._config)
-        self._consumer.subscribe(self._topics)
-        logger.info("Потребитель подключён: сервер=%s, топики=%s",
-                    self._bootstrap_servers, self._topics)
+        self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host))
+        self._channel = self._connection.channel()
+        self._channel.queue_declare(queue=self.queue, durable=True)
+        logger.info("Потребитель подключён: host=%s, queue=%s", self.host, self.queue)
 
-    def start_consuming(self) -> None:
+    def consume(self, callback: Callable) -> None:
         """Запускает цикл чтения сообщений."""
-        if not self._consumer:
-            self.connect_and_subscribe()
+        if not self._channel:
+            self.connect()
 
-        logger.info("Запуск чтения сообщений из топиков: %s", ", ".join(self._topics))
-
-        try:
-            while self._running:
-                msg = self._consumer.poll(timeout=1.0)
-
-                if msg is None:
-                    continue
-
-                if msg.error():
-                    if msg.error().code() == KafkaError._PARTITION_EOF:
-                        continue
-                    logger.error("Ошибка Kafka: %s", msg.error())
-                    self._running = False
-                    continue
-
-                topic = msg.topic()
-                value = msg.value().decode("utf-8", errors="replace")
-                logger.info("Получено: [%s] %s", topic.upper(), value)
-
-        except KeyboardInterrupt:
-            logger.info("Получен сигнал остановки")
-        finally:
-            self.close()
+        logger.info("Запуск потребления из очереди: %s", self.queue)
+        self._channel.basic_consume(queue=self.queue, on_message_callback=callback, auto_ack=False)
+        self._channel.start_consuming()
 
     def close(self) -> None:
-        """Закрывает соединение с Kafka."""
-        if self._consumer:
-            logger.info("Закрытие соединения с Kafka...")
-            self._consumer.close()
-            logger.info("Ресурсы потребителя освобождены")
+        """Останавливает потребление и закрывает ресурсы."""
+        if self._channel and self._channel.is_open:
+            try:
+                self._channel.stop_consuming()
+            except Exception:
+                pass
+            self._channel.close()
+        if self._connection and self._connection.is_open:
+            self._connection.close()
+        logger.info("Ресурсы потребителя закрыты")
 
-    def __enter__(self) -> "MultiTopicConsumer":
-        self.connect_and_subscribe()
+    def __enter__(self) -> "RabbitMQConsumer":
+        self.connect()
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         self.close()
         return False
 
-
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    )
-    logging.getLogger("confluent_kafka").setLevel(logging.WARNING)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+    logging.getLogger("pika").setLevel(logging.WARNING)
 
-    logger.info("Запуск потребителя для топиков orders и payments")
+    print("\n Чтение сообщений (нажмите Ctrl+C для остановки)...")
 
-    with MultiTopicConsumer(
-            topics=["orders", "payments"],
-            group_id="student-consumer-group"
-    ) as consumer:
-        try:
-            consumer.start_consuming()
-        except KeyboardInterrupt:
-            logger.info("Остановка по запросу пользователя")
+
+    def handle_message(ch, method, properties, body):
+        print(f"Получено: {body.decode('utf-8')}")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    try:
+        with RabbitMQConsumer(queue="task_queue") as consumer:
+            consumer.consume(handle_message)
+    except KeyboardInterrupt:
+        print("\n Остановка по запросу пользователя...")
